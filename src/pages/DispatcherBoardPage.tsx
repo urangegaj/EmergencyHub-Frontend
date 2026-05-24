@@ -130,7 +130,7 @@ export function DispatcherBoardPage() {
                   <p className="mt-1 line-clamp-2 text-sm text-slate-600">{emergency.description}</p>
                   <p className="mt-1 text-xs text-slate-500">
                     {new Date(emergency.createdAt).toLocaleString()} ·{' '}
-                    {emergency.assignments.length} assignment(s)
+                    {(emergency.assignments ?? []).length} assignment(s)
                   </p>
                 </div>
                 <EmergencyStatusBadge status={emergency.status} />

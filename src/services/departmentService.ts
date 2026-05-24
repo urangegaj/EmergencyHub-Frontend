@@ -1,6 +1,7 @@
 import { apiClient } from './apiClient';
 import type { DepartmentCase, DeptRoute, DispatcherUnitsResponse, Unit } from '../types';
 
+/** Gateway has no /api/dispatcher/units; aggregate per-department unit endpoints. */
 export const departmentService = {
   getCases: (dept: DeptRoute, status?: string) =>
     apiClient.get<DepartmentCase[]>(`/api/${dept}/cases`, {
@@ -18,6 +19,18 @@ export const departmentService = {
   updateUnitStatus: (dept: DeptRoute, unitId: string, status: string) =>
     apiClient.put<Unit>(`/api/${dept}/units/${unitId}/status`, { status }),
 
-  getDispatcherUnits: () =>
-    apiClient.get<DispatcherUnitsResponse>('/api/dispatcher/units'),
+  getDispatcherUnits: async () => {
+    const [fire, police, medical] = await Promise.all([
+      apiClient.get<Unit[]>('/api/fire/units'),
+      apiClient.get<Unit[]>('/api/police/units'),
+      apiClient.get<Unit[]>('/api/medical/units'),
+    ]);
+    return {
+      data: {
+        fire: fire.data ?? [],
+        police: police.data ?? [],
+        medical: medical.data ?? [],
+      } satisfies DispatcherUnitsResponse,
+    };
+  },
 };

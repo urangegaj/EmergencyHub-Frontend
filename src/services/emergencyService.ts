@@ -1,30 +1,40 @@
 import { apiClient } from './apiClient';
-import type { Emergency, EmergencyListResponse } from '../types';
+import {
+  filterAndPaginateEmergencies,
+  normalizeEmergency,
+  parseEmergencyListPayload,
+  type EmergencyListParams,
+} from '../utils/apiMappers';
+import type { EmergencyListResponse } from '../types';
 
 export const emergencyService = {
-  create: (body: { emergencyTypeId: string; description: string; address: string }) =>
-    apiClient.post<Emergency>('/api/emergencies', body),
+  create: async (body: { emergencyTypeId: string; description: string; address: string }) => {
+    const res = await apiClient.post<unknown>('/api/emergencies', body);
+    return { ...res, data: normalizeEmergency(res.data) };
+  },
 
-  get: (id: string) => apiClient.get<Emergency>(`/api/emergencies/${id}`),
+  get: async (id: string) => {
+    const res = await apiClient.get<unknown>(`/api/emergencies/${id}`);
+    return { ...res, data: normalizeEmergency(res.data) };
+  },
 
-  list: (params?: {
-    status?: string;
-    typeName?: string;
-    fromTs?: number;
-    toTs?: number;
-    q?: string;
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    order?: string;
-  }) => apiClient.get<EmergencyListResponse>('/api/emergencies', { params }),
+  list: async (params?: EmergencyListParams) => {
+    const res = await apiClient.get<unknown>('/api/emergencies');
+    const all = parseEmergencyListPayload(res.data);
+    const paged = filterAndPaginateEmergencies(all, params);
+    return { ...res, data: paged satisfies EmergencyListResponse };
+  },
 
-  poll: (id: string, since: number, timeout = 30, signal?: AbortSignal) =>
-    apiClient.get<Emergency>(`/api/emergencies/${id}/poll`, {
+  poll: async (id: string, since: number, timeout = 30, signal?: AbortSignal) => {
+    const res = await apiClient.get<unknown>(`/api/emergencies/${id}/poll`, {
       params: { since, timeout },
       signal,
-    }),
+    });
+    return { ...res, data: normalizeEmergency(res.data) };
+  },
 
-  assign: (id: string, departments: string[]) =>
-    apiClient.post<Emergency>(`/api/emergencies/${id}/assign`, { departments }),
+  assign: async (id: string, departments: string[]) => {
+    const res = await apiClient.post<unknown>(`/api/emergencies/${id}/assign`, { departments });
+    return { ...res, data: normalizeEmergency(res.data) };
+  },
 };

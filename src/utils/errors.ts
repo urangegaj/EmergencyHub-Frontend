@@ -14,6 +14,12 @@ export function getApiErrorMessage(error: unknown): string {
     if (data && typeof data === 'object' && 'detail' in data && typeof data.detail === 'string') {
       return data.detail;
     }
+    if (error.response?.status === 403) {
+      return 'You do not have permission to perform this action.';
+    }
+    if (error.response?.status === 404) {
+      return 'The requested resource was not found.';
+    }
     return error.message;
   }
   if (error instanceof Error) return error.message;

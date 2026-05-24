@@ -1,13 +1,41 @@
 import { apiClient } from './apiClient';
-import type { PagedUsersResponse } from '../types';
+import type { AdminUser, PagedUsersResponse } from '../types';
+
+function normalizeAdminUser(raw: Record<string, unknown>): AdminUser {
+  return {
+    userId: String(raw.userId ?? ''),
+    email: String(raw.email ?? ''),
+    role: String(raw.role ?? ''),
+    department: (raw.department as AdminUser['department']) ?? null,
+    firstName: String(raw.firstName ?? ''),
+    lastName: String(raw.lastName ?? ''),
+    phone: (raw.phone as string | null) ?? null,
+    isActive: Boolean(raw.isActive ?? true),
+    createdAt: String(raw.createdAt ?? ''),
+  };
+}
 
 export const adminService = {
-  listUsers: (params?: {
+  listUsers: async (params?: {
     role?: string;
     department?: string;
     page?: number;
     pageSize?: number;
-  }) => apiClient.get<PagedUsersResponse>('/api/admin/users', { params }),
+  }) => {
+    const res = await apiClient.get<unknown>('/api/admin/users', { params });
+    const body = (res.data ?? {}) as Record<string, unknown>;
+    const usersRaw = body.users;
+    const users = Array.isArray(usersRaw)
+      ? usersRaw.map((u) => normalizeAdminUser(u as Record<string, unknown>))
+      : [];
+    const data: PagedUsersResponse = {
+      users,
+      totalCount: Number(body.totalCount ?? users.length),
+      page: Number(body.page ?? params?.page ?? 1),
+      pageSize: Number(body.pageSize ?? params?.pageSize ?? 20),
+    };
+    return { ...res, data };
+  },
 
   createUser: (body: {
     email: string;

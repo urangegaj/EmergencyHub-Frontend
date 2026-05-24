@@ -76,11 +76,11 @@ export function EmergencyDetailPage() {
 
           <section className="rounded-lg border border-slate-200 bg-white p-4">
             <h2 className="mb-2 text-lg font-semibold">Assigned departments</h2>
-            {emergency.assignments.length === 0 ? (
+            {(emergency.assignments ?? []).length === 0 ? (
               <p className="text-sm text-slate-600">No departments assigned yet.</p>
             ) : (
               <ul className="flex flex-wrap gap-2">
-                {emergency.assignments.map((assignment) => (
+                {(emergency.assignments ?? []).map((assignment) => (
                   <li
                     key={assignment.id}
                     className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-800"

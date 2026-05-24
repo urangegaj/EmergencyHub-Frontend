@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { authService } from '../services/authService';
+import { mapAuthUser } from '../utils/apiMappers';
 import type { AuthUser } from '../types';
 
 interface AuthContextValue {
@@ -49,12 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     setAccessToken(data.accessToken);
-    const authUser: AuthUser = {
-      userId: data.userId,
-      cityId: data.cityId,
-      role: data.role as AuthUser['role'],
-      department: data.department,
-    };
+    const authUser = mapAuthUser(data);
     setUser(authUser);
     return authUser;
   }, []);
