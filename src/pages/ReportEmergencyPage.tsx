@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
+import { ErrorAlert } from '../components/ErrorAlert';
 import { EMERGENCY_TYPE_OPTIONS } from '../config/emergencyTypes';
 import { emergencyService } from '../services/emergencyService';
 import { getApiErrorMessage } from '../utils/errors';
@@ -35,7 +36,7 @@ export function ReportEmergencyPage() {
     <AppLayout title="Report emergency">
       <form onSubmit={(event) => void handleSubmit(event)} className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-6">
         <h1 className="text-xl font-bold text-slate-900">Report an emergency</h1>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <ErrorAlert message={error} />}
         <label className="block space-y-1 text-sm">
           <span>Type</span>
           <select

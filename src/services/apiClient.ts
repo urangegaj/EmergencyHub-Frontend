@@ -1,6 +1,12 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5158';
+/** In dev, use same-origin + Vite proxy (see vite.config.ts). In prod, call the gateway directly. */
+const BASE_URL = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_URL ?? 'http://localhost:5158');
+
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? 'http://localhost:5158';
 
 export const apiClient = axios.create({ baseURL: BASE_URL });
 
@@ -49,7 +55,9 @@ apiClient.interceptors.response.use(
       const { data } = await axios.post<{
         accessToken: string;
         refreshToken: string;
-      }>(`${BASE_URL}/api/auth/refresh`, { refreshToken });
+      }>(`${import.meta.env.DEV ? API_BASE_URL : BASE_URL}/api/auth/refresh`, {
+        refreshToken,
+      });
 
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);

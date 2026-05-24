@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { LoadingSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import type { Role } from '../types';
 
@@ -13,8 +14,8 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-600">
-        Loading...
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingSpinner />
       </div>
     );
   }

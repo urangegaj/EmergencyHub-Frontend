@@ -8,8 +8,21 @@ import type {
   UnitStatus,
 } from '../types';
 
-export function departmentToRoute(department: Department): DeptRoute {
-  return department.toLowerCase() as DeptRoute;
+const DEPARTMENT_ROUTE_MAP: Record<string, DeptRoute> = {
+  Fire: 'fire',
+  FIRE: 'fire',
+  Police: 'police',
+  POLICE: 'police',
+  Medical: 'medical',
+  MEDICAL: 'medical',
+};
+
+export function departmentToRoute(department: Department | string): DeptRoute {
+  const route = DEPARTMENT_ROUTE_MAP[department];
+  if (!route) {
+    throw new Error(`Unknown department: ${department}`);
+  }
+  return route;
 }
 
 export function parseCaseStatus(status: DepartmentCase['status']): CaseStatus {

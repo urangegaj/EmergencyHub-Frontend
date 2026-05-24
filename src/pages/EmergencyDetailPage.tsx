@@ -1,7 +1,10 @@
 import { useParams } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { EmergencyStatusBadge } from '../components/EmergencyStatusBadge';
+import { ErrorAlert } from '../components/ErrorAlert';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ReportPanel } from '../components/ReportPanel';
+import { StatusHistoryTimeline } from '../components/StatusHistoryTimeline';
 import { useEmergencyPoll } from '../hooks/useEmergencyPoll';
 import { isTerminalEmergencyStatus } from '../utils/department';
 
@@ -13,15 +16,24 @@ export function EmergencyDetailPage() {
 
   return (
     <AppLayout title="Emergency detail">
-      {error && <p className="mb-4 text-red-600">{error}</p>}
-      {!emergency && !error && <p className="text-slate-600">Loading emergency...</p>}
+      {error && <ErrorAlert message={error} className="mb-4" />}
+      {!emergency && !error && <LoadingSpinner label="Loading emergency..." />}
       {emergency && (
         <div className="space-y-4">
           {emergency.status === 'Cancelled' && (
-            <div className="rounded-md bg-slate-200 px-4 py-2 text-slate-800">This emergency was cancelled.</div>
+            <div className="rounded-md bg-slate-200 px-4 py-2 text-slate-800">
+              This emergency was cancelled.
+            </div>
           )}
           {emergency.status === 'Resolved' && (
-            <div className="rounded-md bg-green-100 px-4 py-2 text-green-800">This emergency has been resolved.</div>
+            <div className="rounded-md bg-green-100 px-4 py-2 text-green-800">
+              This emergency has been resolved.
+              {emergency.resolvedAt && (
+                <span className="ml-2 text-sm">
+                  ({new Date(emergency.resolvedAt).toLocaleString()})
+                </span>
+              )}
+            </div>
           )}
           <section className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -53,6 +65,15 @@ export function EmergencyDetailPage() {
               </div>
             </dl>
           </section>
+
+          <section className="rounded-lg border border-slate-200 bg-white p-4">
+            <h2 className="mb-3 text-lg font-semibold">Status history</h2>
+            <StatusHistoryTimeline
+              entries={emergency.statusHistory ?? []}
+              currentStatus={emergency.status}
+            />
+          </section>
+
           <section className="rounded-lg border border-slate-200 bg-white p-4">
             <h2 className="mb-2 text-lg font-semibold">Assigned departments</h2>
             {emergency.assignments.length === 0 ? (
@@ -70,6 +91,7 @@ export function EmergencyDetailPage() {
               </ul>
             )}
           </section>
+
           {emergency.status !== 'Cancelled' && (
             <ReportPanel emergencyId={emergency.id} emergencyStatus={emergency.status} />
           )}

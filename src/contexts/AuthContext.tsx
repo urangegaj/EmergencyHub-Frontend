@@ -28,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(() => !!localStorage.getItem('accessToken'));
 
   useEffect(() => {
-    if (!accessToken) {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
       setLoading(false);
       return;
     }
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       })
       .finally(() => setLoading(false));
-  }, [accessToken]);
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await authService.login(email, password);

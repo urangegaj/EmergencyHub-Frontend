@@ -11,7 +11,7 @@ interface ReportPanelProps {
 }
 
 export function ReportPanel({ emergencyId, emergencyStatus }: ReportPanelProps) {
-  const { report, setReport } = useAssessmentPoll(emergencyId, emergencyStatus);
+  const { report, setReport, restartPolling } = useAssessmentPoll(emergencyId, emergencyStatus);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,6 +21,7 @@ export function ReportPanel({ emergencyId, emergencyStatus }: ReportPanelProps) 
     try {
       const { data } = await assessmentService.retry(emergencyId);
       setReport({ ...data, status: 'Pending' });
+      restartPolling();
     } catch (e) {
       setError(getApiErrorMessage(e));
     } finally {

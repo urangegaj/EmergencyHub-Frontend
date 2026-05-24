@@ -36,6 +36,11 @@ export function LoginPage() {
         className="w-full max-w-md space-y-4 rounded-lg bg-white p-6 shadow"
       >
         <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
+        {(location.state as { message?: string } | null)?.message && (
+          <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
+            {(location.state as { message: string }).message}
+          </p>
+        )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <label className="block space-y-1 text-sm">
           <span>Email</span>

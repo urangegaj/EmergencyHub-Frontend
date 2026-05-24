@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorAlert } from '../components/ErrorAlert';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAuth } from '../contexts/AuthContext';
 import { departmentService } from '../services/departmentService';
@@ -122,7 +125,7 @@ export function DepartmentCasesPage() {
         </button>
       </div>
 
-      {error && <p className="mb-3 text-red-600">{error}</p>}
+      {error && <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-3" />}
 
       {activeTab === 'cases' && (
         <>
@@ -140,7 +143,13 @@ export function DepartmentCasesPage() {
               </button>
             ))}
           </div>
-          {loading && <p className="text-slate-600">Loading cases...</p>}
+          {loading && <LoadingSpinner label="Loading cases..." />}
+          {!loading && cases.length === 0 && (
+            <EmptyState
+              title={`No ${caseStatusFilter.replace('_', ' ').toLowerCase()} cases`}
+              description="Cases appear here when dispatch assigns your department."
+            />
+          )}
           <ul className="space-y-3">
             {cases.map((item) => {
               const current = parseCaseStatus(item.status);
@@ -191,6 +200,10 @@ export function DepartmentCasesPage() {
       )}
 
       {activeTab === 'units' && (
+        <>
+        {units.length === 0 && (
+          <EmptyState title="No units" description="No units are registered for this department." />
+        )}
         <ul className="space-y-2">
           {units.map((unit) => {
             const status = parseUnitStatus(unit.status);
@@ -213,6 +226,7 @@ export function DepartmentCasesPage() {
             );
           })}
         </ul>
+        </>
       )}
     </AppLayout>
   );

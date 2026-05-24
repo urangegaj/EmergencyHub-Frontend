@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { AppLayout } from '../components/AppLayout';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorAlert } from '../components/ErrorAlert';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { adminService } from '../services/adminService';
 import { getApiErrorMessage } from '../utils/errors';
 import type { AdminUser, Department, Role } from '../types';
@@ -84,8 +87,11 @@ export function AdminPanelPage() {
             </select>
           </div>
 
-          {error && <p className="mb-3 text-red-600">{error}</p>}
-          {loading && <p className="text-slate-600">Loading users...</p>}
+          {error && <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-3" />}
+          {loading && <LoadingSpinner label="Loading users..." />}
+          {!loading && users.length === 0 && (
+            <EmptyState title="No users found" description="Adjust filters or create a new user." />
+          )}
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">

@@ -36,6 +36,12 @@ export interface EmergencyAssignment {
   closedAt?: string | null;
 }
 
+export interface StatusHistoryEntry {
+  status: EmergencyStatus;
+  changedAt: string;
+  changedBy?: string;
+}
+
 export interface Emergency {
   id: string;
   cityId: string;
@@ -48,7 +54,9 @@ export interface Emergency {
   version: number;
   createdAt: string;
   updatedAt: string;
+  resolvedAt?: string | null;
   assignments: EmergencyAssignment[];
+  statusHistory?: StatusHistoryEntry[];
 }
 
 export interface EmergencyListResponse {
@@ -114,3 +122,12 @@ export interface PagedUsersResponse {
 }
 
 export type DeptRoute = 'fire' | 'police' | 'medical';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
