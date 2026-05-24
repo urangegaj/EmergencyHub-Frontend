@@ -47,10 +47,19 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-100 via-red-50 to-slate-100">
+      <div className="bg-gradient-to-r from-red-700 to-red-600 px-4 py-6 text-center text-white shadow">
+        <div className="mx-auto flex max-w-md items-center justify-center gap-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-bold text-red-700">
+            EH
+          </span>
+          <span className="text-xl font-semibold">EmergencyHub</span>
+        </div>
+      </div>
+      <div className="flex flex-1 items-center justify-center px-4 py-8">
       <form
         onSubmit={(event) => void handleSubmit(event)}
-        className="w-full max-w-md space-y-4 rounded-lg bg-white p-6 shadow"
+        className="w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-lg"
       >
         <h1 className="text-2xl font-bold text-slate-900">Register</h1>
         <div className="flex gap-2">
@@ -116,6 +125,7 @@ export function RegisterPage() {
           </Link>
         </p>
       </form>
+      </div>
     </div>
   );
 }

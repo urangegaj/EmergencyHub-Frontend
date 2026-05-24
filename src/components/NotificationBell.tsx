@@ -1,12 +1,21 @@
 import { useNotifications } from '../contexts/NotificationContext';
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  variant?: 'header' | 'default';
+}
+
+export function NotificationBell({ variant = 'default' }: NotificationBellProps) {
   const { enabled, unreadCount, notifications, markRead } = useNotifications();
+  const onHeader = variant === 'header';
 
   if (!enabled) {
     return (
       <span
-        className="rounded-md border border-dashed border-slate-300 px-2 py-1 text-xs text-slate-400"
+        className={
+          onHeader
+            ? 'rounded-md border border-dashed border-white/40 px-2 py-1 text-xs text-red-100'
+            : 'rounded-md border border-dashed border-slate-300 px-2 py-1 text-xs text-slate-400'
+        }
         title="Notifications will be available when backend routes are ready"
       >
         🔔 Soon
@@ -16,7 +25,13 @@ export function NotificationBell() {
 
   return (
     <details className="relative">
-      <summary className="relative cursor-pointer list-none rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
+      <summary
+        className={
+          onHeader
+            ? 'relative cursor-pointer list-none rounded-md border border-white/30 bg-white/10 px-2 py-1 hover:bg-white/20 [&::-webkit-details-marker]:hidden'
+            : 'relative cursor-pointer list-none rounded-md border border-slate-300 px-2 py-1 hover:bg-slate-100 [&::-webkit-details-marker]:hidden'
+        }
+      >
         <span aria-hidden>🔔</span>
         {unreadCount > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] text-white">
