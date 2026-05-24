@@ -10,6 +10,7 @@ import {
 import { EmptyState } from '../components/EmptyState';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { AssignEmergencyModal } from '../components/AssignEmergencyModal';
 import { UnitAvailabilityWidget } from '../components/UnitAvailabilityWidget';
 import { emergencyService } from '../services/emergencyService';
 import { getApiErrorMessage } from '../utils/errors';
@@ -22,7 +23,7 @@ export function DispatcherBoardPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [assignTarget, setAssignTarget] = useState<Emergency | null>(null);
   const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
   const [assigning, setAssigning] = useState(false);
 
@@ -70,7 +71,7 @@ export function DispatcherBoardPage() {
     );
     try {
       await emergencyService.assign(emergencyId, selectedDepartments);
-      setAssigningId(null);
+      setAssignTarget(null);
       setSelectedDepartments([]);
       await loadEmergencies();
     } catch (e) {
@@ -137,57 +138,16 @@ export function DispatcherBoardPage() {
               </div>
               {emergency.status === 'Reported' && (
                 <div className="mt-3 border-t border-slate-100 pt-3">
-                  {assigningId === emergency.id ? (
-                    <div className="space-y-2">
-                      {(['Fire', 'Police', 'Medical'] as Department[]).map((dept) => (
-                        <label key={dept} className="mr-4 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={selectedDepartments.includes(dept)}
-                            onChange={(e) => {
-                              setSelectedDepartments((prev) =>
-                                e.target.checked
-                                  ? [...prev, dept]
-                                  : prev.filter((d) => d !== dept),
-                              );
-                            }}
-                          />{' '}
-                          {dept}
-                        </label>
-                      ))}
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={assigning || selectedDepartments.length === 0}
-                          onClick={() => void handleAssign(emergency.id)}
-                          className="rounded-md bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-50"
-                        >
-                          {assigning ? 'Assigning...' : 'Confirm assign'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAssigningId(null);
-                            setSelectedDepartments([]);
-                          }}
-                          className="rounded-md border border-slate-300 px-3 py-1 text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAssigningId(emergency.id);
-                        setSelectedDepartments([]);
-                      }}
-                      className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
-                    >
-                      Assign
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAssignTarget(emergency);
+                      setSelectedDepartments([]);
+                    }}
+                    className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
+                  >
+                    Assign
+                  </button>
                 </div>
               )}
               {emergency.status !== 'Resolved' && emergency.status !== 'Cancelled' && (
@@ -227,6 +187,24 @@ export function DispatcherBoardPage() {
             </button>
           </div>
         </div>
+
+        {assignTarget && (
+          <AssignEmergencyModal
+            emergencyLabel={`${assignTarget.emergencyTypeName} · ${assignTarget.address}`}
+            selectedDepartments={selectedDepartments}
+            onToggleDepartment={(dept, checked) => {
+              setSelectedDepartments((prev) =>
+                checked ? [...prev, dept] : prev.filter((d) => d !== dept),
+              );
+            }}
+            onConfirm={() => void handleAssign(assignTarget.id)}
+            onClose={() => {
+              setAssignTarget(null);
+              setSelectedDepartments([]);
+            }}
+            assigning={assigning}
+          />
+        )}
       </div>
     </AppLayout>
   );

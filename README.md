@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# EmergencyHub Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript SPA for the Emergency Hub platform. Talks to the API Gateway (default `http://localhost:5158`).
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20+
+- Running backend stack (Postgres, Redis, AuthService, Gateway, Emergency + department services)
+- `.env` copied from `.env.example` with your city and emergency type GUIDs
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+cp .env.example .env
+# Edit .env — set VITE_API_URL, VITE_DEFAULT_CITY_ID, emergency type IDs
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open http://localhost:5173
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Environment
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | API Gateway base URL (e.g. `http://localhost:5158`) |
+| `VITE_DEFAULT_CITY_ID` | City GUID for registration |
+| `VITE_EMERGENCY_TYPE_*` | Emergency type GUIDs for report form |
+| `VITE_NOTIFICATIONS_ENABLED` | `true` when notification API exists (Phase 7) |
+
+In development, Vite proxies `/api` to `VITE_API_URL` so cookies/CORS stay simple.
+
+## Default test user
+
+After backend seed: `admin@emergencyhub.local` / `Admin1234!` (Admin role).
+
+## Roles & routes
+
+| Role | Landing |
+|------|---------|
+| Citizen | `/` |
+| Dispatcher | `/dispatcher` |
+| Responder | `/cases` |
+| Admin | `/admin` |
+
+## Scripts
+
+- `npm run dev` — development server
+- `npm run build` — production build
+- `npm run preview` — preview production build
+
+## Architecture notes
+
+- **Auth**: JWT in `localStorage`, refresh queue on 401 (`apiClient.ts`)
+- **Polling**: long-poll on emergency detail; assessment report after `Resolved`
+- **List API**: supports server-side paging when Gateway returns `{ emergencies, totalCount, page, pageSize }`; falls back to client filter/paginate on plain arrays
+- **Dispatcher units**: tries `GET /api/dispatcher/units`, else aggregates fire/police/medical unit endpoints
+- **Notifications**: UI scaffold; enable with `VITE_NOTIFICATIONS_ENABLED=true` when backend routes exist
+
+See `FRONTEND_GUIDE.md` for the full product specification.

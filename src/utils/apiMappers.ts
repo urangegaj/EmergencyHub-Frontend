@@ -1,4 +1,11 @@
-import type { AuthUser, Emergency, EmergencyAssignment, EmergencyListResponse, Role } from '../types';
+import type {
+  AuthUser,
+  Emergency,
+  EmergencyAssignment,
+  EmergencyListResponse,
+  Role,
+  StatusHistoryEntry,
+} from '../types';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -28,12 +35,34 @@ function normalizeAssignment(raw: unknown): EmergencyAssignment {
   };
 }
 
+function normalizeStatusHistoryEntry(raw: unknown): StatusHistoryEntry {
+  const h = (raw ?? {}) as JsonRecord;
+  return {
+    status: str(h.status ?? h.Status, 'Reported') as StatusHistoryEntry['status'],
+    changedAt: str(h.changedAt ?? h.ChangedAt),
+    changedBy: str(h.changedBy ?? h.ChangedBy ?? h.changedByUserId ?? h.ChangedByUserId) || undefined,
+  };
+}
+
 export function normalizeEmergency(raw: unknown): Emergency {
   const e = (raw ?? {}) as JsonRecord;
   const assignmentsRaw = e.assignments ?? e.Assignments;
   const assignments = Array.isArray(assignmentsRaw)
     ? assignmentsRaw.map(normalizeAssignment)
     : [];
+
+  const historyRaw = e.statusHistory ?? e.StatusHistory;
+  const statusHistory = Array.isArray(historyRaw)
+    ? historyRaw.map(normalizeStatusHistoryEntry)
+    : undefined;
+
+  const status = str(e.status ?? e.Status, 'Reported') as Emergency['status'];
+  const explicitResolved = (e.resolvedAt ?? e.ResolvedAt) as string | null | undefined;
+  const resolvedAt =
+    explicitResolved ??
+    (status === 'Resolved'
+      ? statusHistory?.filter((h) => h.status === 'Resolved').at(-1)?.changedAt
+      : undefined);
 
   return {
     id: str(e.id ?? e.Id),
@@ -43,12 +72,13 @@ export function normalizeEmergency(raw: unknown): Emergency {
     emergencyTypeName: str(e.emergencyTypeName ?? e.EmergencyTypeName),
     description: str(e.description ?? e.Description),
     address: str(e.address ?? e.Address),
-    status: str(e.status ?? e.Status, 'Reported') as Emergency['status'],
+    status,
     version: Number(e.version ?? e.Version ?? 0),
     createdAt: str(e.createdAt ?? e.CreatedAt),
     updatedAt: str(e.updatedAt ?? e.UpdatedAt),
-    resolvedAt: (e.resolvedAt ?? e.ResolvedAt) as string | null | undefined,
+    resolvedAt: resolvedAt || undefined,
     assignments,
+    statusHistory,
   };
 }
 
@@ -64,7 +94,6 @@ export interface EmergencyListParams {
   order?: string;
 }
 
-/** Gateway returns a bare array; filter/paginate client-side until server supports query params. */
 export function filterAndPaginateEmergencies(
   items: Emergency[],
   params?: EmergencyListParams,
@@ -114,14 +143,25 @@ export function filterAndPaginateEmergencies(
   return { emergencies, totalCount, page, pageSize };
 }
 
-export function parseEmergencyListPayload(data: unknown): Emergency[] {
+export function parseEmergencyListPayload(data: unknown): EmergencyListResponse {
   if (Array.isArray(data)) {
-    return data.map(normalizeEmergency);
+    const emergencies = data.map(normalizeEmergency);
+    return {
+      emergencies,
+      totalCount: emergencies.length,
+      page: 1,
+      pageSize: emergencies.length || 20,
+    };
   }
+
   const record = (data ?? {}) as JsonRecord;
   const list = record.emergencies ?? record.Emergencies;
-  if (Array.isArray(list)) {
-    return list.map(normalizeEmergency);
-  }
-  return [];
+  const emergencies = Array.isArray(list) ? list.map(normalizeEmergency) : [];
+
+  return {
+    emergencies,
+    totalCount: Number(record.totalCount ?? record.TotalCount ?? emergencies.length),
+    page: Number(record.page ?? record.Page ?? 1),
+    pageSize: Number(record.pageSize ?? record.PageSize ?? 20),
+  };
 }

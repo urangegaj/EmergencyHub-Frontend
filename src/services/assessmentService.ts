@@ -6,7 +6,14 @@ function normalizeReport(raw: Record<string, unknown>): AssessmentReport {
     id: String(raw.id ?? raw.Id ?? ''),
     emergencyId: String(raw.emergencyId ?? raw.EmergencyId ?? ''),
     status: String(raw.status ?? raw.Status ?? 'Pending') as ReportStatus,
-    aiResponse: (raw.aiResponse ?? raw.AiResponse) as string | null | undefined,
+    aiResponse: (raw.aiResponse ?? raw.AiResponse ?? raw.openaiResponse ?? raw.OpenaiResponse) as
+      | string
+      | null
+      | undefined,
+    responseRating:
+      raw.responseRating != null || raw.ResponseRating != null
+        ? Number(raw.responseRating ?? raw.ResponseRating)
+        : undefined,
     lastError: (raw.lastError ?? raw.LastError) as string | null | undefined,
     retryCount: Number(raw.retryCount ?? raw.RetryCount ?? 0),
     createdAt: String(raw.createdAt ?? raw.CreatedAt ?? ''),

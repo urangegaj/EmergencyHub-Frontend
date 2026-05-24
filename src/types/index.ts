@@ -90,6 +90,7 @@ export interface AssessmentReport {
   emergencyId: string;
   status: ReportStatus;
   aiResponse?: string | null;
+  responseRating?: number | null;
   lastError?: string | null;
   retryCount: number;
   createdAt: string;

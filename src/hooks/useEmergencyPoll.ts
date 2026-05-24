@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { emergencyService } from '../services/emergencyService';
 import { isTerminalEmergencyStatus } from '../utils/department';
+import { getApiErrorMessage } from '../utils/errors';
 import type { Emergency } from '../types';
 
 export function useEmergencyPoll(emergencyId: string | undefined) {
@@ -33,7 +34,7 @@ export function useEmergencyPoll(emergencyId: string | undefined) {
         }
       } catch (e) {
         if (!activeRef.current) return;
-        setError(e instanceof Error ? e.message : 'Failed to load emergency');
+        setError(getApiErrorMessage(e));
         return;
       }
 

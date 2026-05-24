@@ -48,6 +48,12 @@ export function ReportPanel({ emergencyId, emergencyStatus }: ReportPanelProps) 
       {report?.status === 'Completed' && (
         <div className="space-y-3">
           <StatusBadge label="Completed" tone="success" />
+          {report.responseRating != null && (
+            <p className="text-sm text-slate-700">
+              Response rating:{' '}
+              <span className="font-semibold">{report.responseRating.toFixed(1)}</span> / 10
+            </p>
+          )}
           <pre className="whitespace-pre-wrap rounded-md bg-slate-50 p-3 text-sm text-slate-800">
             {report.aiResponse ?? 'No report content.'}
           </pre>

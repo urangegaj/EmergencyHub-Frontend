@@ -5,8 +5,6 @@ import {
   parseEmergencyListPayload,
   type EmergencyListParams,
 } from '../utils/apiMappers';
-import type { EmergencyListResponse } from '../types';
-
 export const emergencyService = {
   create: async (body: { emergencyTypeId: string; description: string; address: string }) => {
     const res = await apiClient.post<unknown>('/api/emergencies', body);
@@ -19,10 +17,12 @@ export const emergencyService = {
   },
 
   list: async (params?: EmergencyListParams) => {
-    const res = await apiClient.get<unknown>('/api/emergencies');
-    const all = parseEmergencyListPayload(res.data);
-    const paged = filterAndPaginateEmergencies(all, params);
-    return { ...res, data: paged satisfies EmergencyListResponse };
+    const res = await apiClient.get<unknown>('/api/emergencies', { params });
+    if (Array.isArray(res.data)) {
+      const emergencies = res.data.map((item) => normalizeEmergency(item));
+      return { ...res, data: filterAndPaginateEmergencies(emergencies, params) };
+    }
+    return { ...res, data: parseEmergencyListPayload(res.data) };
   },
 
   poll: async (id: string, since: number, timeout = 30, signal?: AbortSignal) => {
