@@ -1,0 +1,98 @@
+name: Integration & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/emergency-hub
+
+jobs:
+  build-image:
+    name: Build image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t emergency-hub/frontend:${{ github.sha }} \
+            -t emergency-hub/frontend:latest \
+            .
+
+      - name: Save image tarball
+        run: docker save emergency-hub/frontend:latest | gzip > /tmp/frontend.tar.gz
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-frontend
+          path: /tmp/frontend.tar.gz
+
+  push-and-deploy:
+    name: Push & Deploy
+    runs-on: ubuntu-latest
+    needs: build-image
+    permissions:
+      contents: read
+      packages: write
+    env:
+      HAS_KUBECONFIG: ${{ secrets.GCP_SA_KEY != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-frontend
+          path: /tmp/images
+
+      - name: Load Docker image
+        run: docker load < /tmp/images/frontend.tar.gz
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image to GHCR
+        run: |
+          docker tag emergency-hub/frontend:latest ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
+          docker tag emergency-hub/frontend:latest ${{ env.IMAGE_PREFIX }}/frontend:latest
+          docker push ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
+          docker push ${{ env.IMAGE_PREFIX }}/frontend:latest
+
+      - name: Authenticate to Google Cloud
+        if: ${{ env.HAS_KUBECONFIG == 'true' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure kubectl (GKE)
+        if: ${{ env.HAS_KUBECONFIG == 'true' }}
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ vars.GKE_CLUSTER }}
+          location: ${{ vars.GKE_LOCATION }}
+
+      - name: Apply Kubernetes manifest
+        if: ${{ env.HAS_KUBECONFIG == 'true' }}
+        run: kubectl apply -f infra/k8s/apps/frontend.yaml
+
+      - name: Roll out new image
+        if: ${{ env.HAS_KUBECONFIG == 'true' }}
+        run: |
+          kubectl set image deployment/frontend \
+            frontend=${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }} \
+            -n emergency-hub
+
+      - name: Wait for rollout
+        if: ${{ env.HAS_KUBECONFIG == 'true' }}
+        run: kubectl rollout status deployment/frontend -n emergency-hub --timeout=120s
