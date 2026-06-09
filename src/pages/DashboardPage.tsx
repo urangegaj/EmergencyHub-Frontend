@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { DashboardHero } from '../components/DashboardHero';
 import { EmergencyStatusBadge } from '../components/EmergencyStatusBadge';
@@ -10,6 +10,7 @@ import { IconReport } from '../components/icons/NavIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { emergencyService } from '../services/emergencyService';
 import { getApiErrorMessage } from '../utils/errors';
+import { getRoleLandingPath } from '../utils/routing';
 import type { Emergency } from '../types';
 
 export function DashboardPage() {
@@ -21,6 +22,7 @@ export function DashboardPage() {
   const role = user?.role ?? 'Citizen';
 
   useEffect(() => {
+    if (role !== 'Citizen') return;
     let cancelled = false;
     setLoading(true);
     emergencyService
@@ -41,7 +43,11 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, role]);
+
+  if (role !== 'Citizen') {
+    return <Navigate to={getRoleLandingPath(role)} replace />;
+  }
 
   return (
     <AppLayout title="Dashboard">

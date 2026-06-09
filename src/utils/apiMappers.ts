@@ -25,6 +25,24 @@ export function mapAuthUser(data: unknown): AuthUser {
   };
 }
 
+const EMERGENCY_STATUS_MAP: Record<string, Emergency['status']> = {
+  REPORTED: 'Reported',
+  DISPATCHED: 'Dispatched',
+  IN_PROGRESS: 'InProgress',
+  INPROGRESS: 'InProgress',
+  RESOLVED: 'Resolved',
+  CANCELLED: 'Cancelled',
+  Reported: 'Reported',
+  Dispatched: 'Dispatched',
+  InProgress: 'InProgress',
+  Resolved: 'Resolved',
+  Cancelled: 'Cancelled',
+};
+
+function normalizeEmergencyStatus(raw: unknown): Emergency['status'] {
+  return EMERGENCY_STATUS_MAP[str(raw)] ?? 'Reported';
+}
+
 function normalizeAssignment(raw: unknown): EmergencyAssignment {
   const a = (raw ?? {}) as JsonRecord;
   return {
@@ -38,7 +56,7 @@ function normalizeAssignment(raw: unknown): EmergencyAssignment {
 function normalizeStatusHistoryEntry(raw: unknown): StatusHistoryEntry {
   const h = (raw ?? {}) as JsonRecord;
   return {
-    status: str(h.status ?? h.Status, 'Reported') as StatusHistoryEntry['status'],
+    status: normalizeEmergencyStatus(h.status ?? h.Status) as StatusHistoryEntry['status'],
     changedAt: str(h.changedAt ?? h.ChangedAt),
     changedBy: str(h.changedBy ?? h.ChangedBy ?? h.changedByUserId ?? h.ChangedByUserId) || undefined,
   };
@@ -56,7 +74,7 @@ export function normalizeEmergency(raw: unknown): Emergency {
     ? historyRaw.map(normalizeStatusHistoryEntry)
     : undefined;
 
-  const status = str(e.status ?? e.Status, 'Reported') as Emergency['status'];
+  const status = normalizeEmergencyStatus(e.status ?? e.Status);
   const explicitResolved = (e.resolvedAt ?? e.ResolvedAt) as string | null | undefined;
   const resolvedAt =
     explicitResolved ??
@@ -155,12 +173,12 @@ export function parseEmergencyListPayload(data: unknown): EmergencyListResponse 
   }
 
   const record = (data ?? {}) as JsonRecord;
-  const list = record.emergencies ?? record.Emergencies;
+  const list = record.emergencies ?? record.Emergencies ?? record.items ?? record.Items;
   const emergencies = Array.isArray(list) ? list.map(normalizeEmergency) : [];
 
   return {
     emergencies,
-    totalCount: Number(record.totalCount ?? record.TotalCount ?? emergencies.length),
+    totalCount: Number(record.totalCount ?? record.TotalCount ?? record.total ?? record.Total ?? emergencies.length),
     page: Number(record.page ?? record.Page ?? 1),
     pageSize: Number(record.pageSize ?? record.PageSize ?? 20),
   };

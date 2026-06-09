@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
+import { getRoleLandingPath } from '../utils/routing';
 import type { Role } from '../types';
 
 interface RequireAuthProps {
@@ -25,7 +26,7 @@ export function RequireAuth({ children, allowedRoles }: RequireAuthProps) {
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to={getRoleLandingPath(user.role)} replace />;
   }
 
   return <>{children}</>;

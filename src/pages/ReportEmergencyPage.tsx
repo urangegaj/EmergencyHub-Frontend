@@ -6,9 +6,10 @@ import { EMERGENCY_TYPE_OPTIONS } from '../config/emergencyTypes';
 import { emergencyService } from '../services/emergencyService';
 import { getApiErrorMessage } from '../utils/errors';
 
+const OTHER_TYPE_ID = EMERGENCY_TYPE_OPTIONS.find((t) => t.name === 'OTHER')!.id;
+
 export function ReportEmergencyPage() {
   const navigate = useNavigate();
-  const [emergencyTypeId, setEmergencyTypeId] = useState(EMERGENCY_TYPE_OPTIONS[0]?.id ?? '');
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -16,14 +17,10 @@ export function ReportEmergencyPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!emergencyTypeId) {
-      setError('Emergency type IDs are not configured in environment variables.');
-      return;
-    }
     setSubmitting(true);
     setError(null);
     try {
-      const { data } = await emergencyService.create({ emergencyTypeId, description, address });
+      const { data } = await emergencyService.create({ emergencyTypeId: OTHER_TYPE_ID, description, address });
       navigate(`/emergencies/${data.id}`);
     } catch (e) {
       setError(getApiErrorMessage(e));
@@ -37,20 +34,6 @@ export function ReportEmergencyPage() {
       <form onSubmit={(event) => void handleSubmit(event)} className="max-w-xl space-y-4 rounded-lg border border-slate-200 bg-white p-6">
         <h1 className="text-xl font-bold text-slate-900">Report an emergency</h1>
         {error && <ErrorAlert message={error} />}
-        <label className="block space-y-1 text-sm">
-          <span>Type</span>
-          <select
-            value={emergencyTypeId}
-            onChange={(e) => setEmergencyTypeId(e.target.value)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
-          >
-            {EMERGENCY_TYPE_OPTIONS.map((option) => (
-              <option key={option.name} value={option.id} disabled={!option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="block space-y-1 text-sm">
           <span>Description</span>
           <textarea

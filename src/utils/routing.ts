@@ -1,8 +1,12 @@
 import type { AuthUser, Role } from '../types';
 
-/** All roles land on the shared dashboard hub after login. */
-export function getRoleLandingPath(_role?: AuthUser['role']): string {
-  return '/';
+export function getRoleLandingPath(role?: AuthUser['role']): string {
+  switch (role) {
+    case 'Dispatcher': return '/dispatcher';
+    case 'Responder':  return '/cases';
+    case 'Admin':      return '/admin';
+    default:           return '/';
+  }
 }
 
 export type NavIconId = 'dashboard' | 'report' | 'dispatcher' | 'cases' | 'admin';
@@ -16,28 +20,14 @@ export interface NavItem {
 }
 
 export function getNavItemsForRole(role: Role): NavItem[] {
-  const dashboard: NavItem = {
-    label: 'Dashboard',
-    to: '/',
-    icon: 'dashboard',
-    end: true,
-    isActive: (p) => p === '/',
-  };
-
   switch (role) {
     case 'Citizen':
       return [
-        dashboard,
-        {
-          label: 'Report emergency',
-          to: '/emergencies/report',
-          icon: 'report',
-          end: true,
-        },
+        { label: 'Dashboard', to: '/', icon: 'dashboard', end: true, isActive: (p) => p === '/' },
+        { label: 'Report emergency', to: '/emergencies/report', icon: 'report', end: true },
       ];
     case 'Dispatcher':
       return [
-        dashboard,
         {
           label: 'Dispatcher board',
           to: '/dispatcher',
@@ -48,7 +38,6 @@ export function getNavItemsForRole(role: Role): NavItem[] {
       ];
     case 'Responder':
       return [
-        dashboard,
         {
           label: 'My cases',
           to: '/cases',
@@ -58,16 +47,8 @@ export function getNavItemsForRole(role: Role): NavItem[] {
         },
       ];
     case 'Admin':
-      return [
-        dashboard,
-        {
-          label: 'Admin panel',
-          to: '/admin',
-          icon: 'admin',
-          end: true,
-        },
-      ];
+      return [{ label: 'Admin panel', to: '/admin', icon: 'admin', end: true }];
     default:
-      return [dashboard];
+      return [{ label: 'Dashboard', to: '/', icon: 'dashboard', end: true }];
   }
 }

@@ -1,16 +1,26 @@
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { EmergencyStatusBadge } from '../components/EmergencyStatusBadge';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ReportPanel } from '../components/ReportPanel';
 import { StatusHistoryTimeline } from '../components/StatusHistoryTimeline';
+import { useAuth } from '../contexts/AuthContext';
 import { useEmergencyPoll } from '../hooks/useEmergencyPoll';
 import { isTerminalEmergencyStatus } from '../utils/department';
 
 export function EmergencyDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const { emergency, error } = useEmergencyPoll(id);
+
+  if (
+    emergency &&
+    user?.role === 'Citizen' &&
+    emergency.reportedByUserId !== user.userId
+  ) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   const isLive = emergency && !isTerminalEmergencyStatus(emergency.status);
 

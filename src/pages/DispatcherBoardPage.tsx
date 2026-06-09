@@ -53,6 +53,11 @@ export function DispatcherBoardPage() {
     }
   }, [filters, debouncedQ]);
 
+  const handleDebouncedSearch = useCallback((q: string) => {
+    setDebouncedQ(q);
+    setFilters((prev) => (prev.q === q ? prev : { ...prev, q, page: 1 }));
+  }, []);
+
   useEffect(() => {
     void loadEmergencies();
   }, [loadEmergencies]);
@@ -99,10 +104,7 @@ export function DispatcherBoardPage() {
           <EmergencyFilterBar
             filters={filters}
             onChange={setFilters}
-            onDebouncedSearchChange={(q) => {
-              setDebouncedQ(q);
-              setFilters((prev) => ({ ...prev, q, page: 1 }));
-            }}
+            onDebouncedSearchChange={handleDebouncedSearch}
             onClear={clearFilters}
           />
         </section>
